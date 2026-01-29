@@ -64,6 +64,8 @@ async def check_risk_job(context: ContextTypes.DEFAULT_TYPE):
         state["last_risk"] = current_risk
         logging.info(f"Monitoring started. Initial risk: {current_risk}")
         return
+    
+    print(f"Risk: {current_risk}")
 
     # Check for change
     if current_risk != last_risk:
