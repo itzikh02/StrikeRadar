@@ -94,6 +94,8 @@ async def check_risk_job(context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             logging.error(f"Telegram send error: {e}")
 
+        print(f"RISK: {current_risk}")
+
         state["last_risk"] = current_risk
 
 
