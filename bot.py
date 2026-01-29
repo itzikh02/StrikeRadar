@@ -26,16 +26,28 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 state = {"last_risk": None}
 
 
+import json # Add this import at the top
+
 def fetch_risk_data():
-    """Fetch JSON data from the target website."""
-    try:
-        headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(JSON_URL, headers=headers, timeout=10)
-        response.raise_for_status()
-        return response.json()
-    except Exception as e:
-        logging.error(f"Error fetching JSON: {e}")
-        return None
+    """Fetch JSON data from URL or local file for testing."""
+    # Check if JSON_URL in .env starts with 'http'
+    if JSON_URL.startswith("http"):
+        try:
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            response = requests.get(JSON_URL, headers=headers, timeout=10)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            logging.error(f"Error fetching JSON from URL: {e}")
+            return None
+    else:
+        # If it's not a URL, assume it's a local file path
+        try:
+            with open(JSON_URL, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            logging.error(f"Error reading local JSON file: {e}")
+            return None
 
 
 async def check_risk_job(context: ContextTypes.DEFAULT_TYPE):
@@ -58,16 +70,22 @@ async def check_risk_job(context: ContextTypes.DEFAULT_TYPE):
         emoji = "🔺" if current_risk > last_risk else "🔻"
         diff = current_risk - last_risk
 
-        news_detail = data.get("news", {}).get("detail", "N/A")
-        flight_detail = data.get("flight", {}).get("detail", "N/A")
+        pentagon_detail = data.get("pentagon", {}).get("detail", "N/A")
+        tankers_detail = data.get("tankers", {}).get("detail", "N/A")
+        flighet_detail = data.get("flight", {}).get("detail", "N/A")
+        polymarket_detail = data.get("polymarket", {}).get("detail", "N/A")
+        weather_detail = data.get("weather", {}).get("detail", "N/A")
 
         message = (
             f"🚨 *Risk Level Update*\n\n"
             f"Current Level: `{current_risk}` {emoji} ({diff:+})\n"
             f"Previous Level: `{last_risk}`\n\n"
             f"📊 *Quick Stats:*\n"
-            f"📰 News: {news_detail}\n"
-            f"✈️ Flights: {flight_detail}"
+            f"🍕 *Pentagon Pizza Meter*: {pentagon_detail}\n"
+            f"📊 *Polymarket*: {polymarket_detail}\n"
+            f"✈️ *Flights*: {flighet_detail}\n"
+            f"🛢️ *Tankers*: {tankers_detail}\n"
+            f"🌤️ *Weather*: {weather_detail}\n"
         )
 
         try:
@@ -101,10 +119,10 @@ async def main():
         application.job_queue.run_repeating(check_risk_job, interval=INTERVAL, first=1)
 
         logging.info("System is live. No polling active (Send-only mode).")
-        await application.bot.send_message(
-            chat_id=CHAT_ID,
-            text="🤖 Bot is now online and monitoring risk levels."
-            )
+        # await application.bot.send_message(
+        #     chat_id=CHAT_ID,
+        #     text="🤖 Bot is now online and monitoring risk levels from [USStrikeRadar](https://usstrikeradar.com/) "
+        #     )
 
         # Keep the event loop running
         while True:
