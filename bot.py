@@ -64,6 +64,8 @@ async def check_risk_job(context: ContextTypes.DEFAULT_TYPE):
         state["last_risk"] = current_risk
         logging.info(f"Monitoring started. Initial risk: {current_risk}")
         return
+    
+    print(f"RISK: {current_risk}")
 
     # Check for change
     if current_risk != last_risk:
@@ -94,7 +96,6 @@ async def check_risk_job(context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             logging.error(f"Telegram send error: {e}")
 
-        print(f"RISK: {current_risk}")
 
         state["last_risk"] = current_risk
 
